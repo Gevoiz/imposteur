@@ -1,5 +1,5 @@
 // Cache hors-ligne : l'app fonctionne sans connexion une fois installée.
-const CACHE = 'imposteur-v10';
+const CACHE = 'imposteur-v11';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

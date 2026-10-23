@@ -86,6 +86,15 @@ input[type=text]:focus{outline:2px solid var(--primary)}
 .grid .pick{animation:slidein .5s var(--spring) both;animation-delay:calc(var(--d,0) * 60ms + 150ms)}
 .grid .pick.sel{animation:selpulse 1.2s ease-in-out infinite}
 @keyframes selpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.fold{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:6px 0 0;font:inherit;color:var(--muted);text-align:left;cursor:pointer}
+.fold h3{margin:0}
+.fold .sum{flex:1;text-align:right;font-size:.85rem;font-weight:600;color:var(--text);opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fold .chev{transition:transform .35s var(--spring);font-size:.9rem}
+.fold.open .chev{transform:rotate(90deg)}
+.foldbox{flex-shrink:0;display:grid;grid-template-rows:1fr;transition:grid-template-rows .4s var(--out),opacity .3s;margin-top:-6px}
+.foldbox>div{overflow:hidden;display:flex;flex-direction:column;gap:10px;padding-top:6px}
+.foldbox.closed{grid-template-rows:0fr;opacity:0}
+.foldbox.closed>div{padding-top:0}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .wordform{display:flex;flex-direction:column;gap:8px}
 .delta{font-weight:900;color:var(--ok);min-width:34px;text-align:right}
@@ -346,7 +355,7 @@ const SFX = (() => {
 const ACT_SOUND = {
   del: 'del', auto: 'pop', see: 'flip', reveal: null, mute: null, white: 'toggle', knows: 'toggle',
   back: 'back', quit: 'back', menu: 'back', start: 'go', again: 'go', next: 'tap', votes: 'toggle',
-  delw: 'del', clear: 'del', resetScores: 'del', pickv: 'tick',
+  delw: 'del', clear: 'del', fold: 'tick', resetScores: 'del', pickv: 'tick',
   impm: 'tick', impp: 'tick', autom: 'tick', autop: 'tick', cat: 'tick'
 };
 
@@ -470,6 +479,20 @@ function rules() {
   `, { back: home });
 }
 
+/* ---------- Sections repliables (Options, Thèmes) ---------- */
+let folds = Object.assign({ opts: false, themes: false }, store.get('folds', {}));   // true = ouverte
+const foldHead = (key, title, sum) => `<button class="fold ${folds[key] ? 'open' : ''}" data-act="fold" data-arg="${key}">
+    <span class="chev">▶</span><h3>${title}</h3><span class="sum" id="sum-${key}">${sum}</span></button>`;
+const foldBox = (key, inner) => `<div class="foldbox ${folds[key] ? '' : 'closed'}" id="box-${key}"><div>${inner}</div></div>`;
+function toggleFold(key, b) {
+  folds[key] = !folds[key]; store.set('folds', folds);
+  b.classList.toggle('open', folds[key]);
+  $('#box-' + key).classList.toggle('closed', !folds[key]);
+}
+const optSummary = () => [`${impOpts.imp} imposteur${impOpts.imp > 1 ? 's' : ''}`, impOpts.white && 'Mr White', impOpts.knows && 'informé', impOpts.votes && 'votes'].filter(Boolean).join(' · ');
+const themeSummary = () => impOpts.cats.length ? (impOpts.cats.length > 2 ? `${impOpts.cats.length} thèmes` : impOpts.cats.join(', ')) : 'Tout';
+function refreshSums() { $('#sum-opts').textContent = optSummary(); $('#sum-themes').textContent = themeSummary(); }
+
 /* ---------- Imposteur : configuration ---------- */
 function impSetup(focus) {
   const n = players.length;
@@ -481,14 +504,14 @@ function impSetup(focus) {
   store.set('impOpts', impOpts);
   const rr = f => impSetup(f);
   const pa = playerActs(rr);
-  const setImp = v => { impOpts.imp = v; store.set('impOpts', impOpts); $('#impCount').textContent = v; replay($('#impCount'), 'bump'); };
+  const setImp = v => { impOpts.imp = v; store.set('impOpts', impOpts); $('#impCount').textContent = v; replay($('#impCount'), 'bump'); refreshSums(); };
   render(`
     <div class="top"><button class="back" data-act="back">←</button><h2>Imposteur</h2></div>
     <h3>Joueurs (${n})</h3>
     ${playersHTML()}
     ${n < 3 ? `<p class="warn">Il faut au moins 3 joueurs.</p>` : ''}
-    <h3>Options</h3>
-    <div class="card">
+    ${foldHead('opts', 'Options', optSummary())}
+    ${foldBox('opts', `<div class="card">
       <div class="row"><div>Imposteurs<small>Max ${maxImp} pour ${n} joueurs</small></div>
         <div class="stepper"><button data-act="impm">−</button><b id="impCount">${impOpts.imp}</b><button data-act="impp">+</button></div></div>
       <div class="row"><div>Mister White 🤍<small>Un joueur sans mot (5 joueurs min.)</small></div>
@@ -497,11 +520,11 @@ function impSetup(focus) {
         <button class="switch ${impOpts.knows ? 'on' : ''}" data-act="knows" aria-label="Imposteur informé"></button></div>
       <div class="row"><div>Votes &amp; scores 🗳️<small>Vote secret avant la révélation</small></div>
         <button class="switch ${impOpts.votes ? 'on' : ''}" data-act="votes" aria-label="Votes et scores"></button></div>
-    </div>
+    </div>`)}
     ${impOpts.white && n >= 3 && bad > maxBad ? `<p class="warn">Pas assez de joueurs pour Mister White.</p>` : ''}
-    <h3>Thèmes</h3>
-    ${catChips(allThemes(), impOpts.cats)}
-    <p class="muted" style="font-size:.85rem">« Tout » n'inclut pas ${HOT}.</p>
+    ${foldHead('themes', 'Thèmes', themeSummary())}
+    ${foldBox('themes', `${catChips(allThemes(), impOpts.cats)}
+      <p class="muted" style="font-size:.85rem">« Tout » n'inclut pas ${HOT}.</p>`)}
     <div class="spacer"></div>
     <button class="btn big primary" data-act="start" ${ok ? '' : 'disabled'}>Lancer la partie</button>
   `, {
@@ -509,9 +532,10 @@ function impSetup(focus) {
     impm: () => setImp(Math.max(1, impOpts.imp - 1)),
     impp: () => setImp(Math.min(maxImp, impOpts.imp + 1)),
     white: (_, b) => { impOpts.white = !impOpts.white; b.classList.toggle('on'); setTimeout(rr, 300); },
-    knows: (_, b) => { impOpts.knows = !impOpts.knows; b.classList.toggle('on'); store.set('impOpts', impOpts); },
-    votes: (_, b) => { impOpts.votes = !impOpts.votes; b.classList.toggle('on'); store.set('impOpts', impOpts); },
-    cat: (c, b) => { impOpts.cats = toggleCat(impOpts.cats, c); store.set('impOpts', impOpts); syncChips(impOpts.cats, b); },
+    knows: (_, b) => { impOpts.knows = !impOpts.knows; b.classList.toggle('on'); store.set('impOpts', impOpts); refreshSums(); },
+    votes: (_, b) => { impOpts.votes = !impOpts.votes; b.classList.toggle('on'); store.set('impOpts', impOpts); refreshSums(); },
+    cat: (c, b) => { impOpts.cats = toggleCat(impOpts.cats, c); store.set('impOpts', impOpts); syncChips(impOpts.cats, b); refreshSums(); },
+    fold: toggleFold,
     start: startImp
   }, pa.submit, 'imp');
   if (focus) $('#pname').focus();
