@@ -4,3 +4,4 @@ www/
 android/
 signing/
 *.jks
+*.apk
