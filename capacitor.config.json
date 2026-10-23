@@ -1,0 +1,9 @@
+{
+  "appId": "io.github.gevoiz.imposteur",
+  "appName": "Imposteur",
+  "webDir": "www",
+  "backgroundColor": "#151226",
+  "android": {
+    "adjustMarginsForEdgeToEdge": "force"
+  }
+}

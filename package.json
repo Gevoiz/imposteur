@@ -1,0 +1,14 @@
+{
+  "name": "imposteur",
+  "private": true,
+  "description": "Jeu de l'imposteur entre amis, sur un seul téléphone",
+  "scripts": {
+    "web": "node -e \"const fs=require('fs');fs.rmSync('www',{recursive:true,force:true});fs.mkdirSync('www');for(const f of ['index.html','manifest.webmanifest','sw.js','icons'])fs.cpSync(f,'www/'+f,{recursive:true})\""
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0"
+  }
+}
