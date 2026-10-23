@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Imposteur</title>
+<meta name="description" content="Le jeu de l'imposteur entre amis, sur un seul téléphone.">
+<meta name="theme-color" content="#151226">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Imposteur">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>
+:root{
+  --bg:#151226; --bg2:#1f1a38; --card:#2a2350; --line:#3b3270;
+  --text:#f4f1ff; --muted:#a79fd0;
+  --primary:#ff4f7b; --primary2:#ff8a5c; --ok:#3ddc97; --bad:#ff5a5a; --gold:#ffd166;
+  --radius:18px;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  background:radial-gradient(120% 80% at 50% 0%,#2b2160 0%,var(--bg) 60%) fixed,var(--bg);
+  color:var(--text);
+  font-family:ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  -webkit-user-select:none;user-select:none;overscroll-behavior:none;
+}
+#app{max-width:520px;margin:0 auto;min-height:100%;padding:calc(var(--safe-t) + 16px) 16px calc(var(--safe-b) + 20px);display:flex;flex-direction:column}
+.screen{display:flex;flex-direction:column;gap:14px;flex:1}
+.center{justify-content:center;align-items:stretch;text-align:center}
+h1{font-size:2.4rem;margin:0;letter-spacing:-.5px}
+h2{font-size:1.5rem;margin:0}
+h3{font-size:1rem;margin:6px 0 0;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+p{margin:0;line-height:1.45}
+.muted{color:var(--muted)}
+.logo{font-size:5rem;line-height:1;filter:drop-shadow(0 8px 24px #ff4f7b66)}
+.top{display:flex;align-items:center;gap:10px}
+.top h2{flex:1}
+.back{background:var(--card);border:0;color:var(--text);width:42px;height:42px;border-radius:12px;font-size:1.2rem}
+.btn{appearance:none;border:0;border-radius:var(--radius);padding:15px 18px;font:inherit;font-weight:700;font-size:1.05rem;color:var(--text);background:var(--card);box-shadow:inset 0 0 0 1px var(--line);transition:transform .08s}
+.btn:active{transform:scale(.97)}
+.btn.big{padding:20px;font-size:1.2rem}
+.btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary2));box-shadow:0 8px 24px #ff4f7b44}
+.btn.ghost{background:transparent;box-shadow:none;color:var(--muted)}
+.btn:disabled{opacity:.4}
+.btn.sq{width:54px;padding:0;font-size:1.6rem}
+.spacer{flex:1}
+.card{background:var(--bg2);border-radius:var(--radius);padding:16px;box-shadow:inset 0 0 0 1px var(--line)}
+.addrow{display:flex;gap:8px}
+input[type=text]{flex:1;min-width:0;background:var(--bg2);border:0;box-shadow:inset 0 0 0 1px var(--line);color:var(--text);border-radius:14px;padding:14px;font:inherit;font-size:1.05rem;-webkit-user-select:text;user-select:text}
+input[type=text]:focus{outline:2px solid var(--primary)}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.plist li{display:flex;align-items:center;gap:12px;background:var(--bg2);border-radius:14px;padding:8px 8px 8px 10px;font-weight:600}
+.plist li span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#151226;flex:none}
+.x{background:transparent;border:0;color:var(--muted);font-size:1.1rem;width:36px;height:36px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:0;border-radius:999px;padding:9px 14px;font:inherit;font-weight:600;background:var(--bg2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+.chip.on{background:var(--text);color:var(--bg)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
+.row+.row{border-top:1px solid var(--line)}
+.row small{display:block;color:var(--muted);font-size:.85rem;margin-top:2px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:38px;height:38px;border-radius:12px;border:0;background:var(--card);color:var(--text);font-size:1.3rem;font-weight:800}
+.stepper b{min-width:24px;text-align:center;font-size:1.2rem}
+.switch{position:relative;width:52px;height:32px;border-radius:999px;background:var(--card);border:0;box-shadow:inset 0 0 0 1px var(--line);flex:none}
+.switch::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:.2s}
+.switch.on{background:var(--ok)}
+.switch.on::after{left:24px;background:#fff}
+.warn{color:var(--gold);font-size:.9rem}
+.secret{background:linear-gradient(160deg,#3a2f7a,#241d4d);border-radius:26px;padding:34px 20px;box-shadow:0 20px 60px #0008,inset 0 0 0 1px #5a4ca8;display:flex;flex-direction:column;gap:12px;align-items:center}
+.secret .word{font-size:2.6rem;font-weight:900;letter-spacing:-.5px;word-break:break-word}
+.badge{display:inline-block;padding:6px 12px;border-radius:999px;font-weight:800;font-size:.85rem;background:var(--card)}
+.badge.imp{background:var(--bad);color:#fff}
+.badge.civ{background:var(--ok);color:#0f2b20}
+.badge.white{background:#fff;color:#151226}
+.big-name{font-size:2.2rem;font-weight:900;color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.pick{border:0;border-radius:16px;padding:16px 10px;font:inherit;font-weight:700;background:var(--bg2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .35s var(--spring),background .25s,box-shadow .25s}
+.pick:active{transform:scale(.92);transition-duration:.08s}
+.pick.sel{box-shadow:inset 0 0 0 3px var(--primary);background:#3a2140}
+.grid .pick{animation:slidein .5s var(--spring) both;animation-delay:calc(var(--d,0) * 60ms + 150ms)}
+.grid .pick.sel{animation:selpulse 1.2s ease-in-out infinite}
+@keyframes selpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wordform{display:flex;flex-direction:column;gap:8px}
+.delta{font-weight:900;color:var(--ok);min-width:34px;text-align:right}
+.delta.zero{color:var(--muted)}
+.votes{font-size:.85rem;color:var(--muted);font-weight:700}
+.rank{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.rank li{display:flex;align-items:center;gap:12px;background:var(--bg2);border-radius:14px;padding:12px 14px;font-weight:700;animation:slidein .5s var(--spring) both;animation-delay:calc(var(--d,0) * 70ms + 200ms)}
+.rank li span:nth-child(2){flex:1}
+.rank .m{width:28px;text-align:center;font-size:1.3rem}
+.hist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.hist li{background:var(--bg2);border-radius:14px;padding:12px 14px;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:4px}
+.hist .when{font-size:.8rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.hist .words{font-weight:800}
+.hist .who{font-size:.9rem}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+.verdict{font-weight:800;font-size:.95rem}
+.order{counter-reset:o;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.order li{counter-increment:o;display:flex;align-items:center;gap:12px;font-weight:600}
+.order li::before{content:counter(o);width:28px;height:28px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:.85rem;color:var(--muted)}
+.order li:first-child::before{background:var(--gold);color:#151226}
+.banner{font-size:2rem;font-weight:900}
+.rules{text-align:left;display:flex;flex-direction:column;gap:12px}
+.rules b{color:var(--gold)}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.confetti i{position:absolute;top:-10px;width:8px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ---------- Animations ---------- */
+:root{--spring:cubic-bezier(.2,1.5,.4,1);--out:cubic-bezier(.2,.8,.2,1)}
+
+/* Fond vivant : deux halos qui dérivent */
+body::before,body::after{content:"";position:fixed;z-index:-1;width:70vmax;height:70vmax;border-radius:50%;filter:blur(70px);opacity:.35;pointer-events:none}
+body::before{background:#ff4f7b;top:-35vmax;left:-30vmax;animation:drift1 18s ease-in-out infinite alternate}
+body::after{background:#5b3cc4;bottom:-40vmax;right:-30vmax;animation:drift2 22s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(25vmax,20vmax) scale(1.2)}}
+@keyframes drift2{to{transform:translate(-20vmax,-25vmax) scale(1.15)}}
+
+/* Entrée d'écran : chaque bloc arrive en cascade */
+#app>.screen.anim>*{animation:rise .55s var(--spring) both;animation-delay:calc(var(--i,0) * 55ms)}
+@keyframes rise{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
+
+/* Boutons qui rebondissent */
+.btn,.chip,.back,.stepper button,.x{transition:transform .35s var(--spring),background .25s,color .25s,box-shadow .25s,opacity .25s}
+.btn:active,.chip:active,.back:active,.stepper button:active{transform:scale(.92);transition-duration:.08s}
+.btn.primary{position:relative;overflow:hidden}
+.btn.primary::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,#fff5 50%,transparent 70%);transform:translateX(-120%);animation:shine 3.2s ease-in-out infinite}
+.btn.primary:disabled::after{display:none}
+@keyframes shine{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.chip.just{animation:pop .4s var(--spring)}
+.switch::after{transition:left .35s var(--spring),background .25s}
+.switch{transition:background .25s}
+
+/* Accueil */
+.logo{animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-12px) rotate(4deg)}}
+h1.shimmer{background:linear-gradient(90deg,#fff 0%,#ffd166 25%,#ff8a5c 50%,#ff4f7b 75%,#fff 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 4s linear infinite}
+@keyframes shimmer{to{background-position:-200% center}}
+
+/* Passe le téléphone */
+.wiggle{display:inline-block;animation:wiggle 1.6s ease-in-out infinite}
+@keyframes wiggle{0%,60%,100%{transform:rotate(0)}10%,30%,50%{transform:rotate(-14deg)}20%,40%{transform:rotate(14deg)}}
+.big-name{animation:glow 2s ease-in-out infinite}
+@keyframes glow{0%,100%{text-shadow:0 0 0 #ffd16600;transform:scale(1)}50%{text-shadow:0 0 28px #ffd16699;transform:scale(1.05)}}
+
+/* Révélation du mot : carte qui se retourne */
+.stage{perspective:900px}
+.flipin{animation:flip .8s var(--spring) both}
+@keyframes flip{from{transform:rotateY(-180deg) scale(.7);opacity:0}40%{opacity:1}to{transform:none}}
+.flipin .word{animation:zoomword .6s .35s var(--spring) both}
+@keyframes zoomword{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+
+/* Suspense de l'élimination */
+.drum{font-size:4rem;animation:drum .18s linear infinite}
+@keyframes drum{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-4px,2px) rotate(-6deg)}75%{transform:translate(4px,-2px) rotate(6deg)}}
+.secret.shake{animation:shake .5s linear infinite}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px) rotate(-1deg)}40%{transform:translateX(6px) rotate(1deg)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.stamp{animation:stamp .55s var(--spring) both}
+@keyframes stamp{from{opacity:0;transform:scale(3) rotate(-18deg)}to{opacity:1;transform:rotate(-3deg)}}
+.flash{animation:flash .6s ease-out}
+@keyframes flash{from{box-shadow:0 0 0 0 #fff8,0 20px 60px #0008}to{box-shadow:0 0 0 40px #fff0,0 20px 60px #0008}}
+
+/* Listes */
+.plist li.new{animation:pop .5s var(--spring)}
+.plist li.out{animation:out .25s ease-in forwards}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes out{to{opacity:0;transform:translateX(60px) scale(.9)}}
+.bump{animation:bump .35s var(--spring)}
+@keyframes bump{from{transform:scale(1.7);color:var(--gold)}to{transform:none}}
+.order li{animation:slidein .5s var(--spring) both;animation-delay:calc(var(--d,0) * 70ms + 200ms)}
+@keyframes slidein{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
+
+
+/* Fin de partie */
+.banner{animation:banner .9s var(--spring) both}
+@keyframes banner{from{opacity:0;transform:scale(.2) rotate(-12deg)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------- Données ---------- */
+const WORDS = {
+  "Nourriture": [["Pizza","Quiche"],["Croissant","Pain au chocolat"],["Fromage","Beurre"],["Pâtes","Riz"],["Chocolat","Caramel"],["Fraise","Framboise"],["Citron","Pamplemousse"],["Hamburger","Sandwich"],["Crêpe","Gaufre"],["Glace","Sorbet"],["Pomme","Poire"],["Ketchup","Mayonnaise"],["Soupe","Purée"],["Frites","Chips"],["Miel","Confiture"],["Sushi","Ramen"],["Raclette","Fondue"],["Yaourt","Crème dessert"],["Kebab","Tacos"],["Banane","Mangue"],["Tomate","Poivron"],["Carotte","Radis"],["Steak","Côtelette"],["Saucisse","Merguez"],["Baguette","Brioche"],["Cookie","Brownie"],["Tarte","Gâteau"],["Couscous","Paella"],["Lasagnes","Gratin"],["Moutarde","Wasabi"],["Cerise","Raisin"],["Pastèque","Melon"],["Ananas","Noix de coco"],["Champignon","Truffe"],["Hot-dog","Croque-monsieur"],["Macaron","Meringue"],["Popcorn","Bonbons"],["Omelette","Œuf au plat"],["Saumon","Thon"],["Crevette","Homard"],["Nuggets","Cordon bleu"],["Burrito","Fajitas"]],
+  "Boissons": [["Café","Thé"],["Vin","Bière"],["Coca","Orangina"],["Champagne","Prosecco"],["Jus d'orange","Jus de pomme"],["Eau gazeuse","Limonade"],["Whisky","Rhum"],["Vodka","Tequila"],["Chocolat chaud","Cappuccino"],["Smoothie","Milkshake"],["Cidre","Poiré"],["Mojito","Piña colada"],["Red Bull","Monster"],["Pastis","Sangria"],["Spritz","Kir"],["Expresso","Latte"],["Gin","Martini"],["Bubble tea","Thé glacé"],["Lait","Lait d'amande"],["Sirop","Diabolo"]],
+  "Animaux": [["Chat","Chien"],["Lion","Tigre"],["Dauphin","Requin"],["Abeille","Guêpe"],["Cheval","Âne"],["Aigle","Faucon"],["Grenouille","Crapaud"],["Loup","Renard"],["Pingouin","Manchot"],["Souris","Hamster"],["Vache","Chèvre"],["Papillon","Libellule"],["Serpent","Lézard"],["Hibou","Chouette"],["Singe","Gorille"],["Lapin","Lièvre"],["Éléphant","Rhinocéros"],["Girafe","Zèbre"],["Ours","Panda"],["Mouton","Lama"],["Poule","Canard"],["Baleine","Orque"],["Crocodile","Hippopotame"],["Fourmi","Termite"],["Escargot","Limace"],["Perroquet","Toucan"],["Kangourou","Koala"],["Moustique","Mouche"],["Poulpe","Méduse"],["Écureuil","Raton laveur"],["Cochon","Sanglier"],["Chameau","Dromadaire"],["Tortue","Hérisson"],["Araignée","Scorpion"],["Cygne","Flamant rose"],["Phoque","Otarie"],["Panthère","Jaguar"],["Guépard","Léopard"],["Coq","Dinde"],["Corbeau","Pie"],["Pigeon","Moineau"],["Paon","Faisan"],["Castor","Loutre"],["Chauve-souris","Rat"],["Taureau","Bison"],["Lynx","Chat sauvage"],["Cerf","Élan"],["Hyène","Chacal"],["Mouette","Albatros"],["Coccinelle","Sauterelle"]],
+  "Objets": [["Fourchette","Cuillère"],["Stylo","Crayon"],["Téléphone","Tablette"],["Chaise","Tabouret"],["Lunettes","Lentilles"],["Parapluie","Imperméable"],["Montre","Réveil"],["Brosse à dents","Dentifrice"],["Clé","Cadenas"],["Ordinateur","Télévision"],["Bougie","Lampe"],["Sac à dos","Valise"],["Ciseaux","Couteau"],["Miroir","Fenêtre"],["Casque","Écouteurs"],["Briquet","Allumettes"],["Marteau","Tournevis"],["Livre","Magazine"],["Ballon","Frisbee"],["Appareil photo","Caméra"],["Peigne","Brosse à cheveux"],["Portefeuille","Porte-monnaie"],["Télécommande","Manette"],["Clavier","Souris d'ordinateur"],["Chargeur","Batterie externe"],["Gobelet","Tasse"],["Sifflet","Klaxon"],["Enveloppe","Carte postale"],["Corde","Chaîne"],["Poubelle","Seau"]],
+  "Maison": [["Canapé","Fauteuil"],["Lit","Hamac"],["Oreiller","Couette"],["Douche","Baignoire"],["Frigo","Congélateur"],["Four","Micro-ondes"],["Lave-linge","Lave-vaisselle"],["Aspirateur","Balai"],["Rideau","Store"],["Tapis","Paillasson"],["Grenier","Cave"],["Cuisine","Salle à manger"],["Balcon","Terrasse"],["Escalier","Ascenseur"],["Cheminée","Radiateur"],["Garage","Abri de jardin"],["Robinet","Douchette"],["Étagère","Armoire"],["Porte","Portail"],["Toit","Plafond"],["Piscine","Jacuzzi"],["Ventilateur","Climatiseur"],["Grille-pain","Cafetière"],["Serviette","Peignoir"],["Jardin","Potager"]],
+  "Vêtements & mode": [["Jean","Jogging"],["Baskets","Bottes"],["Pull","Sweat"],["Chemise","Polo"],["Casquette","Bonnet"],["Écharpe","Cravate"],["Robe","Jupe"],["Short","Bermuda"],["Manteau","Doudoune"],["Chaussette","Collant"],["Pyjama","Chemise de nuit"],["Maillot de bain","Bikini"],["Tongs","Sandales"],["Gants","Moufles"],["Ceinture","Bretelles"],["Bague","Bracelet"],["Collier","Boucles d'oreilles"],["Sac à main","Pochette"],["Costume","Smoking"],["Parfum","Déodorant"],["Rouge à lèvres","Vernis à ongles"],["Tatouage","Piercing"],["Lunettes de soleil","Visière"],["Talons","Ballerines"],["T-shirt","Débardeur"]],
+  "Lieux": [["Plage","Piscine municipale"],["Montagne","Colline"],["Cinéma","Théâtre"],["Hôpital","Pharmacie"],["École","Université"],["Restaurant","Cantine"],["Aéroport","Gare"],["Forêt","Jungle"],["Bibliothèque","Librairie"],["Désert","Banquise"],["Château","Palais"],["Supermarché","Marché"],["Boulangerie","Pâtisserie"],["Zoo","Ferme"],["Discothèque","Bar"],["Église","Mosquée"],["Prison","Commissariat"],["Musée","Galerie d'art"],["Parc","Square"],["Hôtel","Camping"],["Stade","Gymnase"],["Banque","Poste"],["Île","Presqu'île"],["Volcan","Geyser"],["Grotte","Tunnel"],["Port","Marina"],["Fête foraine","Parc d'attractions"],["Cimetière","Chapelle"],["Station-service","Parking"],["Salle de sport","Dojo"],["Phare","Moulin"],["Mairie","Préfecture"],["Sauna","Hammam"],["Aquarium","Vivarium"],["Laverie","Pressing"],["Tour Eiffel","Arc de Triomphe"],["Statue de la Liberté","Big Ben"],["Pyramides","Colisée"],["Disneyland","Parc Astérix"]],
+  "Pays & villes": [["Paris","Londres"],["France","Belgique"],["Italie","Espagne"],["Japon","Chine"],["États-Unis","Canada"],["Brésil","Argentine"],["New York","Los Angeles"],["Marseille","Nice"],["Lyon","Bordeaux"],["Rome","Venise"],["Égypte","Maroc"],["Allemagne","Autriche"],["Suisse","Luxembourg"],["Australie","Nouvelle-Zélande"],["Mexique","Colombie"],["Russie","Ukraine"],["Inde","Thaïlande"],["Grèce","Turquie"],["Portugal","Irlande"],["Dubaï","Las Vegas"],["Corse","Sardaigne"],["Tokyo","Séoul"],["Bretagne","Normandie"],["Barcelone","Madrid"],["Hawaï","Tahiti"]],
+  "Métiers": [["Pompier","Policier"],["Médecin","Infirmier"],["Boulanger","Pâtissier"],["Professeur","Directeur"],["Pilote","Hôtesse de l'air"],["Avocat","Juge"],["Cuisinier","Serveur"],["Coiffeur","Barbier"],["Plombier","Électricien"],["Acteur","Chanteur"],["Dentiste","Vétérinaire"],["Facteur","Livreur"],["Boucher","Poissonnier"],["Agriculteur","Jardinier"],["Architecte","Maçon"],["Journaliste","Écrivain"],["Militaire","Gendarme"],["Caissier","Vendeur"],["Photographe","Cameraman"],["Chirurgien","Pharmacien"],["Mécanicien","Garagiste"],["DJ","Musicien"],["Youtubeur","Influenceur"],["Banquier","Comptable"],["Astronaute","Pilote de chasse"],["Chauffeur de taxi","Chauffeur de bus"],["Magicien","Clown"],["Détective","Espion"],["Peintre","Sculpteur"],["Mannequin","Danseur"],["Sage-femme","Puéricultrice"],["Vigile","Garde du corps"],["Notaire","Huissier"],["Psychologue","Coach de vie"],["Fleuriste","Paysagiste"],["Ambulancier","Brancardier"],["Prof de sport","Coach sportif"],["Trader","Courtier"]],
+  "Sports": [["Football","Rugby"],["Tennis","Badminton"],["Ski","Snowboard"],["Natation","Plongée"],["Basket","Handball"],["Boxe","Judo"],["Golf","Mini-golf"],["Surf","Skate"],["Volley","Beach-volley"],["Course à pied","Marche"],["Cyclisme","VTT"],["Escalade","Randonnée"],["Karaté","Taekwondo"],["Ping-pong","Squash"],["Équitation","Rodéo"],["Formule 1","Rallye"],["Patinage","Hockey"],["Musculation","CrossFit"],["Escrime","Tir à l'arc"],["Kayak","Aviron"],["Baseball","Cricket"],["Parachute","Parapente"],["Bowling","Pétanque"],["Gymnastique","Danse"],["Jeux olympiques","Coupe du monde"],["MMA","Catch"],["MotoGP","Motocross"],["Water-polo","Plongeon"],["Saut en longueur","Saut en hauteur"],["Marathon","Triathlon"],["Javelot","Lancer de poids"],["Curling","Biathlon"],["Pole dance","Zumba"],["Roland-Garros","Wimbledon"],["Ligue des champions","Ligue 1"],["PSG","OM"],["Real Madrid","Barça"],["Messi","Ronaldo"],["Mbappé","Neymar"],["Zidane","Platini"],["LeBron James","Michael Jordan"],["Tour de France","Giro"]],
+  "Loisirs & jeux": [["Échecs","Dames"],["Monopoly","Uno"],["Puzzle","Maquette"],["Yoga","Méditation"],["Karaoké","Concert"],["Cartes","Dés"],["Cache-cache","Chat perché"],["Pêche","Chasse"],["Origami","Scrapbooking"],["Lecture","Écriture"],["Peinture","Dessin"],["Jardinage","Bricolage"],["Jeux de société","Jeux vidéo"],["Cirque","Spectacle de magie"],["Escape game","Laser game"],["Billard","Air hockey"],["Fléchettes","Baby-foot"],["Tricot","Couture"],["Mots croisés","Sudoku"],["Photographie","Vidéo"]],
+  "Transports": [["Avion","Hélicoptère"],["Voiture","Moto"],["Bateau","Sous-marin"],["Train","Métro"],["Vélo","Trottinette"],["Bus","Tramway"],["Taxi","Uber"],["Fusée","Navette spatiale"],["Camion","Camionnette"],["Scooter","Mobylette"],["Voilier","Yacht"],["Montgolfière","Dirigeable"],["TGV","Eurostar"],["Ambulance","Camion de pompiers"],["Tracteur","Moissonneuse"],["Pédalo","Barque"],["Téléphérique","Télésiège"],["Skateboard","Rollers"],["Jet-ski","Hors-bord"],["Calèche","Carrosse"]],
+  "Nature & météo": [["Soleil","Lune"],["Pluie","Neige"],["Orage","Tempête"],["Arc-en-ciel","Aurore boréale"],["Nuage","Brouillard"],["Fleur","Arbre"],["Rose","Tulipe"],["Sapin","Chêne"],["Rivière","Lac"],["Mer","Océan"],["Cascade","Fontaine"],["Été","Printemps"],["Hiver","Automne"],["Étoile","Planète"],["Éclair","Tonnerre"],["Sable","Galet"],["Feuille","Herbe"],["Verglas","Grêle"],["Tornade","Ouragan"],["Lever de soleil","Coucher de soleil"]],
+  "Corps & santé": [["Main","Pied"],["Œil","Oreille"],["Bouche","Nez"],["Cheveux","Barbe"],["Genou","Coude"],["Cœur","Poumons"],["Rhume","Grippe"],["Pansement","Plâtre"],["Dent","Langue"],["Doigt","Orteil"],["Épaule","Hanche"],["Sang","Sueur"],["Vaccin","Piqûre"],["Mal de tête","Mal de ventre"],["Fièvre","Toux"],["Sieste","Nuit"],["Rêve","Cauchemar"],["Rire","Sourire"],["Bâillement","Éternuement"],["Muscles","Os"]],
+  "Ciné & séries": [["Harry Potter","Le Seigneur des Anneaux"],["Star Wars","Star Trek"],["Batman","Superman"],["Spider-Man","Iron Man"],["Titanic","Avatar"],["Le Roi Lion","Le Livre de la Jungle"],["La Reine des neiges","Raiponce"],["Shrek","Le Chat Potté"],["Toy Story","Cars"],["Friends","How I Met Your Mother"],["Stranger Things","Mercredi"],["Game of Thrones","The Witcher"],["La Casa de Papel","Lupin"],["Squid Game","Alice in Borderland"],["Les Simpson","Family Guy"],["Bob l'éponge","Oui-Oui"],["Pokémon","Digimon"],["Dragon Ball","Naruto"],["One Piece","Fairy Tail"],["James Bond","Mission Impossible"],["Fast and Furious","Le Transporteur"],["Astérix","Tintin"],["Les Minions","Moi, moche et méchant"],["Jurassic Park","King Kong"],["Pirates des Caraïbes","Indiana Jones"],["Le Parrain","Scarface"],["Netflix","Disney+"],["Marvel","DC Comics"],["Scooby-Doo","Tom et Jerry"],["Kaamelott","Les Visiteurs"],["Breaking Bad","Better Call Saul"],["Peaky Blinders","Narcos"],["The Office","Brooklyn Nine-Nine"],["The Crown","Bridgerton"],["Le Hobbit","Narnia"],["Matrix","Inception"],["Avengers","Justice League"],["Hulk","Thor"],["Wolverine","Deadpool"],["Captain America","Black Panther"],["Joker","Harley Quinn"],["Mulan","Pocahontas"],["Aladdin","Hercule"],["Cendrillon","Blanche-Neige"],["La Belle et la Bête","La Petite Sirène"],["Le Monde de Nemo","Vaiana"],["Coco","Encanto"],["Les Indestructibles","Monstres et Cie"],["Bienvenue chez les Ch'tis","Intouchables"],["OSS 117","Le Dîner de cons"],["Plus belle la vie","Demain nous appartient"],["Joséphine ange gardien","Camping Paradis"],["Grey's Anatomy","Dr House"],["Prison Break","Lost"],["The Walking Dead","Zombieland"],["Alien","Predator"],["Terminator","RoboCop"],["Rocky","Creed"],["Les Bronzés","Les Tuche"]],
+  "Jeux vidéo": [["Mario","Sonic"],["Minecraft","Roblox"],["Fortnite","Call of Duty"],["Zelda","Final Fantasy"],["FIFA","PES"],["GTA","Red Dead Redemption"],["Pac-Man","Tetris"],["PlayStation","Xbox"],["Nintendo Switch","Game Boy"],["League of Legends","Valorant"],["Among Us","Fall Guys"],["Mario Kart","Rocket League"],["Clash Royale","Clash of Clans"],["Candy Crush","Subway Surfers"],["The Sims","Animal Crossing"],["Pikachu","Rondoudou"],["Donkey Kong","Yoshi"],["Assassin's Creed","Tomb Raider"],["Steam","Twitch"],["Casque VR","Console portable"],["Luigi","Wario"],["Peach","Daisy"],["Bowser","Ganondorf"],["Link","Samus"],["Kirby","Bomberman"],["Metroid","Castlevania"],["Super Smash Bros","Brawlhalla"],["Street Fighter","Tekken"],["Mortal Kombat","Soul Calibur"],["Overwatch","Apex Legends"],["Counter-Strike","Rainbow Six Siege"],["PUBG","Warzone"],["Battlefield","Halo"],["Destiny","Borderlands"],["Skyrim","Oblivion"],["Elden Ring","Dark Souls"],["Bloodborne","Sekiro"],["Hollow Knight","Celeste"],["Cuphead","Rayman"],["Crash Bandicoot","Spyro"],["Ratchet & Clank","Jak and Daxter"],["Uncharted","The Last of Us"],["God of War","Devil May Cry"],["Resident Evil","Silent Hill"],["Dead by Daylight","Phasmophobia"],["Five Nights at Freddy's","Poppy Playtime"],["Fallout","Cyberpunk 2077"],["Mass Effect","Starfield"],["Diablo","Path of Exile"],["World of Warcraft","Guild Wars"],["Hearthstone","Yu-Gi-Oh"],["StarCraft","Age of Empires"],["Civilization","Total War"],["Brawl Stars","Stumble Guys"],["Genshin Impact","Honkai Star Rail"],["Angry Birds","Cut the Rope"],["Flappy Bird","Doodle Jump"],["Temple Run","Jetpack Joyride"],["Geometry Dash","Piano Tiles"],["Stardew Valley","Terraria"],["Hades","Dead Cells"],["It Takes Two","A Way Out"],["Overcooked","Cooking Mama"],["Just Dance","Guitar Hero"],["Wii Sports","Wii Fit"],["Nintendo 64","GameCube"],["Super Nintendo","Mega Drive"],["PS5","PS4"],["Xbox Series","Xbox 360"],["Nintendo DS","PSP"],["Borne d'arcade","Flipper"],["Speedrun","Let's play"],["Boss final","Mini-boss"],["Skin","Emote"],["Battle pass","Loot box"],["Respawn","Checkpoint"],["Game Over","Écran titre"],["Points de vie","Mana"],["Level up","Niveau bonus"],["Quête","Mission secondaire"],["PNJ","Compagnon"],["Mode histoire","Mode multijoueur"],["Lag","Bug"],["Noob","Tryhard"],["Streamer","Pro gamer"],["Esport","Tournoi"],["DualSense","Joy-Con"],["Pikmin","Lemmings"],["Snake","Pong"],["Space Invaders","Asteroids"],["Far Cry","Just Cause"],["Watch Dogs","Hitman"],["Need for Speed","Gran Turismo"],["Forza Horizon","The Crew"],["NBA 2K","WWE 2K"],["Portal","Half-Life"],["BioShock","Dishonored"],["Doom","Quake"],["Sea of Thieves","Skull and Bones"],["Rust","DayZ"],["ARK","Subnautica"],["Gang Beasts","Human Fall Flat"],["Wii","Kinect"],["Tamagotchi","Nintendogs"],["Professeur Layton","Ace Attorney"],["Persona","Dragon Quest"],["Kingdom Hearts","Ni no Kuni"],["Pokémon Rouge","Pokémon Bleu"],["Dracaufeu","Tortank"],["Mewtwo","Mew"],["Évoli","Goupix"],["Master Chief","Kratos"],["Lara Croft","Nathan Drake"],["Tails","Knuckles"],["Creeper","Enderman"],["Battle royale","Deathmatch"],["Jeu de tir","Jeu de combat"],["MMORPG","MOBA"],["Jeu mobile","Jeu console"],["Discord","TeamSpeak"],["Game Pass","PlayStation Plus"],["Epic Games","Ubisoft"],["Nintendo","Sega"],["Valve","Riot Games"],["Blizzard","Bethesda"]],
+  "Musique": [["Guitare","Violon"],["Piano","Batterie"],["Rap","Rock"],["Pop","Électro"],["Jazz","Blues"],["Trompette","Saxophone"],["Chorale","Orchestre"],["Micro","Enceinte"],["Spotify","Deezer"],["Festival","Concert en salle"],["Vinyle","Cassette"],["Flûte","Clarinette"],["Accordéon","Harmonica"],["Reggae","Ska"],["Opéra","Comédie musicale"],["Rappeur","Chanteur de rock"],["Clip","Live"],["Batteur","Bassiste"],["Tube de l'été","Slow"],["Radio","Podcast"],["Beyoncé","Rihanna"],["Eminem","50 Cent"],["Jul","Ninho"],["Aya Nakamura","Angèle"],["Daft Punk","David Guetta"],["Michael Jackson","Prince"],["Johnny Hallyday","Michel Sardou"],["Stromae","Orelsan"],["Taylor Swift","Ariana Grande"],["The Beatles","The Rolling Stones"],["Queen","ABBA"],["Céline Dion","Mylène Farmer"],["PNL","SCH"],["Booba","Kaaris"],["Drake","Travis Scott"]],
+  "Marques": [["McDonald's","Burger King"],["Coca-Cola","Pepsi"],["Nike","Adidas"],["Apple","Samsung"],["iPhone","Android"],["Instagram","TikTok"],["YouTube","Dailymotion"],["WhatsApp","Snapchat"],["Amazon","Ali Express"],["Google","Wikipédia"],["Ikea","Conforama"],["Lego","Playmobil"],["Nutella","Kinder"],["Haribo","Carambar"],["Ferrari","Lamborghini"],["Renault","Peugeot"],["Tesla","BMW"],["Zara","H&M"],["Rolex","Swatch"],["Starbucks","Dunkin'"],["KFC","Subway"],["Decathlon","Intersport"],["Carrefour","Leclerc"],["Monster Munch","Pringles"],["Facebook","Twitter"],["Lacoste","Ralph Lauren"],["Gucci","Louis Vuitton"],["Chanel","Dior"],["Puma","Reebok"],["Converse","Vans"],["Ray-Ban","Oakley"],["Oasis","Fanta"],["Evian","Vittel"],["Danone","Yoplait"],["Milka","Côte d'Or"],["Doritos","Lay's"],["Twix","Mars"],["M&M's","Smarties"],["Airbnb","Booking"],["Uber Eats","Deliveroo"],["Vinted","Leboncoin"],["PayPal","Lydia"],["Sephora","Yves Rocher"]],
+  "Fêtes & soirées": [["Noël","Halloween"],["Mariage","Anniversaire"],["Nouvel An","14 Juillet"],["Pâques","Carnaval"],["Saint-Valentin","Fête des mères"],["Barbecue","Pique-nique"],["Soirée pyjama","Soirée jeux"],["Feu d'artifice","Pétards"],["Gâteau d'anniversaire","Bougies"],["Cadeau","Surprise"],["Ballon de baudruche","Guirlande"],["Déguisement","Masque"],["Enterrement de vie de garçon","Enterrement de vie de jeune fille"],["Apéro","Brunch"],["Beer pong","Action ou vérité"],["Boule à facettes","Stroboscope"],["Sapin de Noël","Crèche"],["Père Noël","Lutin"],["Calendrier de l'Avent","Galette des rois"],["Bal masqué","Bal de promo"],["Fête de la musique","Fête des voisins"],["Baby shower","Gender reveal"],["Crémaillère","Pot de départ"],["Gueule de bois","Nuit blanche"],["Lancer de bouquet","Première danse"]],
+  "École & bureau": [["Cahier","Classeur"],["Gomme","Correcteur"],["Règle","Équerre"],["Tableau","Écran"],["Récréation","Cantine scolaire"],["Devoirs","Contrôle"],["Bac","Brevet"],["Prof de maths","Prof de français"],["Bureau","Open space"],["Réunion","Visioconférence"],["Imprimante","Photocopieuse"],["Agrafeuse","Trombone"],["Stage","Alternance"],["Patron","Collègue"],["Vacances","Week-end"],["Salaire","Prime"],["Post-it","Bloc-notes"],["Calculatrice","Ordinateur portable"],["Cartable","Trousse"],["Diplôme","Bulletin de notes"]],
+  "Fantastique": [["Vampire","Zombie"],["Pirate","Viking"],["Licorne","Dragon"],["Fantôme","Sorcière"],["Sorcier","Druide"],["Fée","Elfe"],["Sirène","Monstre du Loch Ness"],["Ogre","Troll"],["Loup-garou","Yéti"],["Extraterrestre","Robot"],["Chevalier","Samouraï"],["Ninja","Assassin"],["Princesse","Reine"],["Roi","Empereur"],["Baguette magique","Potion"],["Château hanté","Train fantôme"],["Super-héros","Super-vilain"],["Momie","Squelette"],["Génie","Fée marraine"],["Dinosaure","Mammouth"]],
+  "Animés": [["L'Attaque des Titans","Demon Slayer"],["My Hero Academia","Jujutsu Kaisen"],["Death Note","Code Geass"],["Hunter x Hunter","Yu Yu Hakusho"],["Bleach","Black Clover"],["Sailor Moon","Cardcaptor Sakura"],["One Punch Man","Mob Psycho 100"],["Fullmetal Alchemist","Soul Eater"],["Tokyo Ghoul","Chainsaw Man"],["Goku","Vegeta"],["Luffy","Zoro"],["Sasuke","Itachi"],["Kakashi","Jiraiya"],["Totoro","Ponyo"],["Le Voyage de Chihiro","Princesse Mononoké"],["Le Château ambulant","Kiki la petite sorcière"],["Olive et Tom","Inazuma Eleven"],["Blue Lock","Haikyu"],["Spy x Family","Kaguya-sama"],["Your Name","A Silent Voice"],["Evangelion","Gundam"],["Cowboy Bebop","Lupin III"],["Saint Seiya","Ken le survivant"],["Les Mystérieuses Cités d'or","Ulysse 31"],["Detective Conan","Nicky Larson"],["Inuyasha","Kenshin"],["Dr Stone","Fire Force"],["Vinland Saga","Berserk"],["Solo Leveling","Sword Art Online"],["Re:Zero","Konosuba"],["Frieren","Mushoku Tensei"],["Manga","Webtoon"],["Shonen","Shojo"],["Kamehameha","Rasengan"],["Sharingan","Byakugan"],["Super Saiyan","Mode Ermite"],["Roi des pirates","Hokage"],["Sacha","Ondine"],["Team Rocket","Akatsuki"],["Crunchyroll","ADN"],["Cosplay","Japan Expo"],["Onigiri","Mochi"],["Senpai","Kohai"],["Waifu","Husbando"],["Otaku","Weeb"],["Zenitsu","Inosuke"],["Gojo","Sukuna"],["Light Yagami","L"],["Eren","Livaï"],["Nami","Robin"]],
+  "🔞 Soirée hot": [["Bisou","Câlin"],["Rendez-vous galant","Speed dating"],["Tinder","Bumble"],["Coup d'un soir","Sex friend"],["Strip-poker","Jeu de la bouteille"],["Lingerie","Nuisette"],["Préservatif","Pilule"],["Suçon","Morsure"],["Menottes","Bandeau"],["Massage","Bain moussant"],["Strip-tease","Lap dance"],["Sextoy","Lubrifiant"],["Ex","Crush"],["Flirt","Drague"],["Walk of shame","Lendemain de soirée"],["Nudes","Sexto"],["Kamasutra","Cinquante nuances de Grey"],["Love hôtel","Motel"],["Chippendales","Magic Mike"],["Cougar","Sugar daddy"],["Bas résille","Porte-jarretelles"],["Sous la couette","Sous la douche"],["Fantasme","Rêve érotique"],["Préliminaires","Bisous dans le cou"],["Infidélité","Jalousie"],["Plan à trois","Échangisme"],["Playboy","OnlyFans"],["Lune de miel","Week-end en amoureux"],["Naturisme","Nu intégral"],["Club de strip","Cabaret"]]
+};
+
+/* ---------- Utilitaires ---------- */
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = a => a[Math.random() * a.length | 0];
+const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} };
+const COLORS = ['#ffd166','#3ddc97','#6ec8ff','#ff8a5c','#c49bff','#ff6fae','#9be564','#ffb86b','#7ef0e0','#f7a1ff'];
+const color = i => COLORS[i % COLORS.length];
+const ini = n => (/^P(\d+)$/.exec(n) || [])[1] || n[0].toUpperCase();
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+const HOT = '🔞 Soirée hot';   // jamais inclus dans « Tout »
+const MINE = '⭐ Mes mots';
+let myWords = store.get('myWords', []);   // paires ajoutées par l'utilisateur
+let history = store.get('history', []);   // dernières parties
+let scores = store.get('scores', {});     // scores de la soirée (mode votes)
+const allThemes = () => [...(myWords.length ? [MINE] : []), ...Object.keys(WORDS)];
+const themeWords = c => c === MINE ? myWords : WORDS[c] || [];
+
+let players = store.get('players', []);
+let impOpts = Object.assign({ imp: 1, white: false, knows: false, votes: false, cats: [] }, store.get('impOpts', {}));
+impOpts.cats = impOpts.cats.filter(c => c in WORDS || c === MINE); // thèmes renommés/supprimés entre deux versions
+let recentPairs = store.get('recentPairs', []);
+let timers = [];
+
+function clearTimers() { timers.forEach(t => { clearInterval(t); clearTimeout(t); }); timers = []; }
+
+// `key` : quand on re-rend le même écran (ex. ajout d'un joueur), pas d'animation ni de retour en haut.
+let lastKey = null;
+function render(html, acts = {}, onSubmit, key) {
+  clearTimers();
+  const same = key && key === lastKey;
+  lastKey = key || null;
+  app.innerHTML = `<div class="screen">${html}</div>`;
+  const root = app.firstElementChild;
+  if (!same) {
+    root.classList.add('anim');
+    [...root.children].forEach((c, i) => c.style.setProperty('--i', Math.min(i, 10)));
+  }
+  app.onclick = e => {
+    const b = e.target.closest('[data-act]');
+    if (!b) return;
+    if (b.disabled) return SFX.play('nope');
+    if (!acts[b.dataset.act]) return;
+    const act = b.dataset.act;
+    SFX.play(act in ACT_SOUND ? ACT_SOUND[act] : 'tap');
+    acts[act](b.dataset.arg, b);
+  };
+  app.onsubmit = e => { e.preventDefault(); onSubmit && onSubmit(e.target); };
+  if (!same) window.scrollTo(0, 0);
+}
+
+/* ---------- Sons (synthétisés, aucun fichier) ---------- */
+const SFX = (() => {
+  let ctx, muted = store.get('muted', false);
+  const ac = () => {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  };
+  function tone(freq, dur, { type = 'sine', vol = .2, slide = 0, delay = 0 } = {}) {
+    if (muted) return;
+    const c = ac(), t = c.currentTime + delay;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + .01);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(c.destination);
+    o.start(t); o.stop(t + dur + .02);
+  }
+  function noise(dur, { vol = .2, delay = 0, freq = 1000, q = 1 } = {}) {
+    if (muted) return;
+    const c = ac(), t = c.currentTime + delay;
+    const buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = buf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    src.connect(f).connect(g).connect(c.destination);
+    src.start(t);
+  }
+  const play = {
+    tap: () => tone(520, .09, { type: 'triangle', vol: .18, slide: 760 }),
+    back: () => tone(600, .1, { type: 'triangle', vol: .15, slide: 380 }),
+    pop: () => { tone(380, .14, { vol: .25, slide: 950 }); tone(1200, .06, { type: 'triangle', vol: .06, delay: .05 }); },
+    del: () => { noise(.2, { freq: 1800, vol: .18 }); tone(480, .16, { type: 'triangle', vol: .12, slide: 180 }); },
+    tick: () => tone(900, .05, { type: 'square', vol: .05 }),
+    toggle: () => { tone(440, .07, { type: 'square', vol: .06 }); tone(660, .09, { type: 'square', vol: .06, delay: .06 }); },
+    nope: () => tone(180, .18, { type: 'sawtooth', vol: .08, slide: 120 }),
+    flip: () => { noise(.3, { freq: 3000, vol: .15, q: .6 }); tone(260, .35, { vol: .14, slide: 1100, delay: .05 }); tone(1320, .25, { type: 'triangle', vol: .08, delay: .35 }); },
+    go: () => [523, 659, 784].forEach((f, i) => tone(f, .14, { type: 'triangle', vol: .14, delay: i * .07 })),
+    // roulement de tambour qui monte en puissance
+    drum: dur => {
+      const n = Math.floor(dur / .065);
+      for (let i = 0; i < n; i++) {
+        const k = i / n;
+        noise(.07, { freq: 900 + 600 * k, vol: .04 + .22 * k, delay: i * .065, q: .8 });
+        if (i % 4 === 0) tone(90, .12, { vol: .1 + .25 * k, slide: 55, delay: i * .065 });
+      }
+    },
+    // coup de tampon + fanfare
+    reveal: () => {
+      tone(140, .5, { vol: .55, slide: 40 });
+      noise(.35, { freq: 400, vol: .35, q: .5 });
+      [523, 659, 784, 1047].forEach((f, i) => tone(f, i === 3 ? .6 : .18, { type: 'triangle', vol: .16, delay: .25 + i * .12 }));
+      [659, 784, 1047, 1319].forEach((f, i) => tone(f, i === 3 ? .6 : .18, { type: 'sine', vol: .08, delay: .25 + i * .12 }));
+    }
+  };
+  return {
+    play: (name, ...a) => { try { play[name] && play[name](...a); } catch {} },
+    get muted() { return muted; },
+    toggleMute() { muted = !muted; store.set('muted', muted); return muted; }
+  };
+})();
+// Son joué selon le bouton (data-act) ; par défaut un petit « tap »
+const ACT_SOUND = {
+  del: 'del', auto: 'pop', see: 'flip', reveal: null, mute: null, white: 'toggle', knows: 'toggle',
+  back: 'back', quit: 'back', menu: 'back', start: 'go', again: 'go', next: 'tap', votes: 'toggle',
+  delw: 'del', clear: 'del', resetScores: 'del', pickv: 'tick',
+  impm: 'tick', impp: 'tick', autom: 'tick', autop: 'tick', cat: 'tick'
+};
+
+// Relance une animation CSS sur un élément (ex. chiffre qui rebondit)
+function replay(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+
+function confetti() {
+  const box = document.createElement('div');
+  box.className = 'confetti';
+  for (let i = 0; i < 60; i++) {
+    const c = document.createElement('i');
+    c.style.left = Math.random() * 100 + '%';
+    c.style.background = pick(COLORS);
+    c.style.animationDuration = 1.5 + Math.random() * 2 + 's';
+    c.style.animationDelay = Math.random() * .5 + 's';
+    box.appendChild(c);
+  }
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 4500);
+}
+
+/* ---------- Joueurs (partagé) ---------- */
+let autoCount = Math.max(3, players.length);
+function playersHTML() {
+  return `
+  <div class="card row" style="padding:10px 12px">
+    <div style="flex:1;min-width:0">Joueurs<small>Auto : P1, P2…</small></div>
+    <div class="stepper"><button data-act="autom">−</button><b id="autoCount">${autoCount}</b><button data-act="autop">+</button></div>
+    <button class="btn primary" style="padding:10px 14px;font-size:.95rem;flex:none" data-act="auto">Auto</button>
+  </div>
+  <form class="addrow" autocomplete="off">
+    <input type="text" id="pname" maxlength="16" placeholder="Ajouter un joueur…" enterkeyhint="done">
+    <button class="btn primary sq" aria-label="Ajouter">+</button>
+  </form>
+  <ul class="plist">${players.map((p, i) => `
+    <li><span class="av" style="background:${color(i)}">${esc(ini(p))}</span><span>${esc(p)}</span>
+    <button class="x" data-act="del" data-arg="${i}" aria-label="Retirer ${esc(p)}">✕</button></li>`).join('')}
+  </ul>`;
+}
+function playerActs(rerender) {
+  return {
+    del: (i, b) => {
+      b.closest('li').classList.add('out');
+      setTimeout(() => { players.splice(+i, 1); store.set('players', players); rerender(); }, 230);
+    },
+    autom: () => { autoCount = Math.max(1, autoCount - 1); $('#autoCount').textContent = autoCount; replay($('#autoCount'), 'bump'); },
+    autop: () => { autoCount = Math.min(20, autoCount + 1); $('#autoCount').textContent = autoCount; replay($('#autoCount'), 'bump'); },
+    auto: () => {
+      players = Array.from({ length: autoCount }, (_, i) => 'P' + (i + 1)); store.set('players', players); rerender();
+      document.querySelectorAll('.plist li').forEach((li, i) => { li.style.animationDelay = i * 40 + 'ms'; li.classList.add('new'); });
+    },
+    submit: () => {
+      const inp = $('#pname'), name = inp.value.trim();
+      if (!name) return;
+      if (players.some(p => p.toLowerCase() === name.toLowerCase())) { SFX.play('nope'); inp.value = ''; inp.placeholder = 'Nom déjà pris !'; return; }
+      SFX.play('pop');
+      players.push(name); store.set('players', players); rerender(true);
+      const li = document.querySelector('.plist li:last-child'); if (li) li.classList.add('new');
+    }
+  };
+}
+function catChips(all, selected) {
+  return `<div class="chips">
+    <button class="chip ${selected.length ? '' : 'on'}" data-act="cat" data-arg="">Tout</button>
+    ${all.map(c => `<button class="chip ${selected.includes(c) ? 'on' : ''}" data-act="cat" data-arg="${esc(c)}">${esc(c)}</button>`).join('')}
+  </div>`;
+}
+// Met à jour les puces de thèmes sans re-rendre l'écran
+function syncChips(selected, changed) {
+  document.querySelectorAll('[data-act=cat]').forEach(ch => {
+    const on = ch.dataset.arg ? selected.includes(ch.dataset.arg) : !selected.length;
+    ch.classList.toggle('on', on);
+    if (on && ch === changed) replay(ch, 'just');
+  });
+}
+function toggleCat(list, c) {
+  if (!c) return [];
+  const i = list.indexOf(c);
+  if (i >= 0) list.splice(i, 1); else list.push(c);
+  return list;
+}
+
+/* ---------- Accueil ---------- */
+function home() {
+  render(`
+    <div class="top" style="justify-content:flex-end">
+      <button class="back" data-act="mute" aria-label="Son">${SFX.muted ? '🔇' : '🔊'}</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="center screen" style="flex:0">
+      <div class="logo">🕵️</div>
+      <h1 class="shimmer">Imposteur</h1>
+      <p class="muted">Le jeu d'ambiance entre amis, sur un seul téléphone</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn big primary" data-act="imp">🎭 Jouer à l'Imposteur</button>
+    <div class="duo">
+      <button class="btn" data-act="mine">⭐ Mes mots</button>
+      <button class="btn" data-act="hist">📜 Historique</button>
+    </div>
+    <button class="btn ghost" data-act="rules">📖 Règles du jeu</button>
+  `, {
+    imp: impSetup, rules, mine: myWordsScreen, hist: historyScreen,
+    mute: (_, b) => { b.textContent = SFX.toggleMute() ? '🔇' : '🔊'; SFX.play('toggle'); replay(b, 'just'); }
+  });
+}
+
+function rules() {
+  render(`
+    <div class="top"><button class="back" data-act="back">←</button><h2>Règles</h2></div>
+    <div class="card rules">
+      <p><b>🎭 Imposteur</b> (3 joueurs minimum)</p>
+      <p>Tous les joueurs reçoivent le <b>même mot secret</b>… sauf l'<b>imposteur</b>, qui reçoit un mot proche (ex : <i>Chat</i> / <i>Chien</i>). Personne ne sait qui est l'imposteur — pas même lui, sauf si l'option est activée !</p>
+      <p>Chacun à son tour dit <b>un mot</b> en rapport avec son mot secret, sans être trop évident. Puis on débat pour trouver qui est l'imposteur.</p>
+      <p>Quand tout le monde a son avis, appuyez sur <b>Révéler</b> pour découvrir qui était l'imposteur… et voir qui avait vu juste !</p>
+      <p><b>🤍 Mister White</b> (option) n'a <b>aucun mot</b> : il doit bluffer pour ne pas se faire repérer.</p>
+      <p><b>🗳️ Votes &amp; scores</b> (option) : avant la révélation, chacun vote en secret. Un civil qui vote pour un imposteur gagne <b>+1</b>. Un imposteur qui n'est pas le plus voté s'en sort et gagne <b>+2</b>.</p>
+      <p><b>⭐ Mes mots</b> : ajoute tes propres paires depuis l'accueil, elles apparaissent comme un thème.</p>
+      <p><b>🔞 Soirée hot</b> n'est jamais tiré avec « Tout » : il faut le sélectionner exprès.</p>
+    </div>
+  `, { back: home });
+}
+
+/* ---------- Imposteur : configuration ---------- */
+function impSetup(focus) {
+  const n = players.length;
+  const maxBad = Math.max(1, Math.floor((n - 1) / 2));
+  const maxImp = Math.max(1, maxBad - (impOpts.white ? 1 : 0));
+  impOpts.imp = Math.min(impOpts.imp, maxImp);
+  const bad = impOpts.imp + (impOpts.white ? 1 : 0);
+  const ok = n >= 3 && bad <= maxBad;
+  store.set('impOpts', impOpts);
+  const rr = f => impSetup(f);
+  const pa = playerActs(rr);
+  const setImp = v => { impOpts.imp = v; store.set('impOpts', impOpts); $('#impCount').textContent = v; replay($('#impCount'), 'bump'); };
+  render(`
+    <div class="top"><button class="back" data-act="back">←</button><h2>Imposteur</h2></div>
+    <h3>Joueurs (${n})</h3>
+    ${playersHTML()}
+    ${n < 3 ? `<p class="warn">Il faut au moins 3 joueurs.</p>` : ''}
+    <h3>Options</h3>
+    <div class="card">
+      <div class="row"><div>Imposteurs<small>Max ${maxImp} pour ${n} joueurs</small></div>
+        <div class="stepper"><button data-act="impm">−</button><b id="impCount">${impOpts.imp}</b><button data-act="impp">+</button></div></div>
+      <div class="row"><div>Mister White 🤍<small>Un joueur sans mot (5 joueurs min.)</small></div>
+        <button class="switch ${impOpts.white ? 'on' : ''}" data-act="white" aria-label="Mister White"></button></div>
+      <div class="row"><div>L'imposteur sait qu'il l'est<small>Sinon, il le découvre en jouant</small></div>
+        <button class="switch ${impOpts.knows ? 'on' : ''}" data-act="knows" aria-label="Imposteur informé"></button></div>
+      <div class="row"><div>Votes &amp; scores 🗳️<small>Vote secret avant la révélation</small></div>
+        <button class="switch ${impOpts.votes ? 'on' : ''}" data-act="votes" aria-label="Votes et scores"></button></div>
+    </div>
+    ${impOpts.white && n >= 3 && bad > maxBad ? `<p class="warn">Pas assez de joueurs pour Mister White.</p>` : ''}
+    <h3>Thèmes</h3>
+    ${catChips(allThemes(), impOpts.cats)}
+    <p class="muted" style="font-size:.85rem">« Tout » n'inclut pas ${HOT}.</p>
+    <div class="spacer"></div>
+    <button class="btn big primary" data-act="start" ${ok ? '' : 'disabled'}>Lancer la partie</button>
+  `, {
+    back: home, ...pa,
+    impm: () => setImp(Math.max(1, impOpts.imp - 1)),
+    impp: () => setImp(Math.min(maxImp, impOpts.imp + 1)),
+    white: (_, b) => { impOpts.white = !impOpts.white; b.classList.toggle('on'); setTimeout(rr, 300); },
+    knows: (_, b) => { impOpts.knows = !impOpts.knows; b.classList.toggle('on'); store.set('impOpts', impOpts); },
+    votes: (_, b) => { impOpts.votes = !impOpts.votes; b.classList.toggle('on'); store.set('impOpts', impOpts); },
+    cat: (c, b) => { impOpts.cats = toggleCat(impOpts.cats, c); store.set('impOpts', impOpts); syncChips(impOpts.cats, b); },
+    start: startImp
+  }, pa.submit, 'imp');
+  if (focus) $('#pname').focus();
+}
+
+/* ---------- Imposteur : partie ---------- */
+let G;
+function startImp() {
+  const fromCats = cats => cats.flatMap(c => themeWords(c).map(p => [p, c]));
+  let pool = fromCats(impOpts.cats);
+  if (!pool.length) pool = fromCats(allThemes().filter(c => c !== HOT));
+  const fresh = pool.filter(([p]) => !recentPairs.includes(p[0]));
+  if (fresh.length) pool = fresh;
+  let [pair, cat] = pick(pool);
+  recentPairs = [pair[0], ...recentPairs].slice(0, 200);
+  store.set('recentPairs', recentPairs);
+  if (Math.random() < .5) pair = [pair[1], pair[0]];
+
+  const n = players.length;
+  const roles = [];
+  for (let i = 0; i < impOpts.imp; i++) roles.push('imp');
+  if (impOpts.white) roles.push('white');
+  while (roles.length < n) roles.push('civ');
+  const shuffled = shuffle(roles);
+  G = { civ: pair[0], imp: pair[1], cat, idx: 0, votes: null,
+        ps: players.map((name, i) => ({ name, i, role: shuffled[i] })) };
+  passPhone();
+}
+
+function passPhone() {
+  const p = G.ps[G.idx];
+  render(`
+    <p class="muted" style="text-align:center">Joueur ${G.idx + 1} / ${G.ps.length}</p>
+    <div class="spacer"></div>
+    <div class="center screen" style="flex:0">
+      <div style="font-size:4rem"><span class="wiggle">📱</span></div>
+      <p class="muted">Passe le téléphone à</p>
+      <div class="big-name">${esc(p.name)}</div>
+      <p class="muted">Les autres, ne regardez pas !</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn big primary" data-act="see">C'est moi, voir mon mot 👀</button>
+    <button class="btn ghost" data-act="quit">Quitter la partie</button>
+  `, { see: showWord, quit: impSetup });
+}
+
+function showWord() {
+  buzz(40);
+  const p = G.ps[G.idx];
+  let inner;
+  if (p.role === 'white') {
+    inner = `<span class="badge white">🤍 MISTER WHITE</span><div class="word">Aucun mot</div><p class="muted">Écoute les autres et bluffe !</p>`;
+  } else {
+    const w = p.role === 'imp' ? G.imp : G.civ;
+    const tag = p.role === 'imp' && impOpts.knows ? `<span class="badge imp">😈 TU ES L'IMPOSTEUR</span>` : `<span class="badge">Ton mot secret</span>`;
+    inner = `${tag}<div class="word">${esc(w)}</div>`;
+  }
+  const last = G.idx === G.ps.length - 1;
+  render(`
+    <p class="muted" style="text-align:center">${esc(p.name)}</p>
+    <div class="spacer"></div>
+    <div class="stage"><div class="secret flipin">${inner}</div></div>
+    <div class="spacer"></div>
+    <button class="btn big primary" data-act="next">${last ? 'Tout le monde a vu → Jouer' : 'Cacher et passer ➜'}</button>
+  `, { next: () => { if (last) discuss(); else { G.idx++; passPhone(); } } });
+}
+
+function discuss() {
+  // Mister White ne commence jamais
+  const starters = G.ps.filter(p => p.role !== 'white');
+  const first = pick(starters.length ? starters : G.ps);
+  const k = G.ps.indexOf(first);
+  const order = G.ps.slice(k).concat(G.ps.slice(0, k));
+  const many = G.ps.filter(p => p.role !== 'civ').length > 1;
+  render(`
+    <div class="top"><h2>À vous de jouer !</h2></div>
+    <div class="card">
+      <p>Chacun dit <b>un mot</b> en rapport avec son mot secret, dans cet ordre :</p>
+    </div>
+    <ol class="order">${order.map((p, d) => `<li style="--d:${d}"><span class="av" style="background:${color(p.i)}">${esc(ini(p.name))}</span>${esc(p.name)}</li>`).join('')}</ol>
+    <p class="muted" style="text-align:center">Puis débattez : qui est ${many ? 'parmi les imposteurs' : "l'imposteur"} ?</p>
+    <div class="spacer"></div>
+    ${impOpts.votes
+      ? `<button class="btn big primary" data-act="vote">Passer au vote secret 🗳️</button>`
+      : `<button class="btn big primary" data-act="reveal">Révéler ${many ? 'les imposteurs' : "l'imposteur"} 😈</button>`}
+  `, { reveal: suspense, vote: () => { G.votes = []; votePass(0); } });
+}
+
+/* ---------- Vote secret (option) ---------- */
+function votePass(i) {
+  const p = G.ps[i];
+  render(`
+    <p class="muted" style="text-align:center">Vote ${i + 1} / ${G.ps.length}</p>
+    <div class="spacer"></div>
+    <div class="center screen" style="flex:0">
+      <div style="font-size:4rem"><span class="wiggle">🗳️</span></div>
+      <p class="muted">${i ? 'Vote enregistré ✅ Passe le téléphone à' : 'Passe le téléphone à'}</p>
+      <div class="big-name">${esc(p.name)}</div>
+      <p class="muted">Vote en secret, les autres ne regardent pas !</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn big primary" data-act="go">C'est moi, voter</button>
+  `, { go: () => voteSelect(i) });
+}
+
+function voteSelect(i) {
+  const me = G.ps[i];
+  let sel = null;
+  render(`
+    <div class="top"><h2>${esc(me.name)}, qui est l'imposteur ?</h2></div>
+    <div class="grid">${G.ps.filter(p => p !== me).map((p, d) => `
+      <button class="pick" style="--d:${d}" data-act="pickv" data-arg="${p.i}">
+        <span class="av" style="background:${color(p.i)}">${esc(ini(p.name))}</span>${esc(p.name)}</button>`).join('')}
+    </div>
+    <div class="spacer"></div>
+    <button class="btn big primary" data-act="ok" id="okv" disabled>Choisis un joueur</button>
+  `, {
+    pickv: (j, b) => {
+      sel = +j;
+      // les autres cartes ne rejouent pas leur animation d'entrée
+      document.querySelectorAll('.pick').forEach(x => { x.classList.toggle('sel', x === b); x.style.animation = x === b ? '' : 'none'; });
+      const k = $('#okv'); k.disabled = false; k.textContent = 'Voter contre ' + G.ps[sel].name; replay(k, 'just');
+      buzz(15);
+    },
+    ok: () => {
+      G.votes[i] = sel;
+      if (i < G.ps.length - 1) votePass(i + 1); else suspense();
+    }
+  });
+}
+
+function suspense() {
+  const many = G.ps.filter(p => p.role !== 'civ').length > 1;
+  render(`
+    <div class="spacer"></div>
+    <div class="secret shake"><div class="drum">🥁</div><p class="muted">${many ? 'Les imposteurs étaient…' : "L'imposteur était…"}</p><div class="word">???</div></div>
+    <div class="spacer"></div>
+  `);
+  buzz([30, 60, 30, 60, 30, 60, 30]);
+  SFX.play('drum', 1.6);
+  timers.push(setTimeout(revealImp, 1600));
+}
+
+// Calcule les points du vote : civil qui vise un imposteur +1, imposteur pas le plus voté +2
+function tallyVotes() {
+  const got = G.ps.map(() => 0);
+  G.votes.forEach(t => got[t]++);
+  const max = Math.max(...got);
+  const caught = G.ps.map((p, i) => got[i] === max);
+  const delta = G.ps.map((p, i) => p.role === 'civ'
+    ? (G.ps[G.votes[i]].role !== 'civ' ? 1 : 0)
+    : (caught[i] ? 0 : 2));
+  return { got, caught, delta };
+}
+
+function revealImp() {
+  const bad = G.ps.filter(p => p.role !== 'civ');
+  const roleBadge = r => ({ civ: '<span class="badge civ">Civil</span>', imp: '<span class="badge imp">Imposteur</span>', white: '<span class="badge white">Mr White</span>' }[r]);
+  const V = G.votes ? tallyVotes() : null;
+  if (V) G.ps.forEach((p, i) => scores[p.name] = (scores[p.name] || 0) + V.delta[i]);
+  store.set('scores', scores);
+  history.unshift({
+    t: Date.now(), civ: G.civ, imp: G.imp, cat: G.cat,
+    bad: bad.map(p => ({ name: p.name, role: p.role, caught: V ? V.caught[p.i] : null }))
+  });
+  history = history.slice(0, 100);
+  store.set('history', history);
+  const ranking = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  confetti(); buzz(120); SFX.play('reveal');
+  render(`
+    <div class="center screen" style="flex:0"><div class="banner">${bad.length > 1 ? 'Les imposteurs étaient…' : "L'imposteur était…"}</div></div>
+    <div class="secret flash">${bad.map((p, d) => `
+      <div class="big-name">${esc(p.name)}</div>
+      <span class="badge ${p.role} stamp" style="font-size:1.1rem;animation-delay:${300 + d * 250}ms">${p.role === 'imp' ? '😈 IMPOSTEUR' : '🤍 MISTER WHITE'}</span>
+      ${V ? `<p class="verdict">${V.caught[p.i] ? '🎯 Démasqué !' : '😏 Il s\'en sort ! +2'}</p>` : ''}`).join('')}
+    </div>
+    <div class="card">
+      <div class="row"><span>Mot des civils</span><b>${esc(G.civ)}</b></div>
+      <div class="row"><span>Mot de l'imposteur</span><b>${esc(G.imp)}</b></div>
+    </div>
+    <ul class="plist">${G.ps.map(p => `<li><span class="av" style="background:${color(p.i)}">${esc(ini(p.name))}</span><span>${esc(p.name)}${V ? ` <span class="votes">🗳️ ${V.got[p.i]}</span>` : ''}</span>${roleBadge(p.role)}${V ? `<span class="delta ${V.delta[p.i] ? '' : 'zero'}">+${V.delta[p.i]}</span>` : ''}</li>`).join('')}</ul>
+    ${V ? `<h3>Scores de la soirée</h3>${rankHTML(ranking)}` : ''}
+    <div class="spacer"></div>
+    <button class="btn big primary" data-act="again">🔁 Rejouer</button>
+    <button class="btn" data-act="menu">Menu</button>
+  `, { again: startImp, menu: home });
+}
+
+function rankHTML(ranking) {
+  return `<ul class="rank">${ranking.map(([n, s], i) => `<li style="--d:${i}"><span class="m">${['🥇', '🥈', '🥉'][i] || i + 1}</span><span>${esc(n)}</span><b>${s} pt${s > 1 ? 's' : ''}</b></li>`).join('')}</ul>`;
+}
+
+/* ---------- Mes mots ---------- */
+function myWordsScreen(focus) {
+  render(`
+    <div class="top"><button class="back" data-act="back">←</button><h2>⭐ Mes mots</h2></div>
+    <p class="muted">Ajoute tes propres paires : elles apparaissent dans le thème « ${MINE} ».</p>
+    <form class="wordform card" autocomplete="off">
+      <input type="text" id="w1" maxlength="30" placeholder="Mot des civils (ex : Pizza)" enterkeyhint="next">
+      <input type="text" id="w2" maxlength="30" placeholder="Mot de l'imposteur (ex : Quiche)" enterkeyhint="done">
+      <button class="btn primary">Ajouter la paire</button>
+      <p class="warn" id="werr" style="display:none"></p>
+    </form>
+    <h3>Mes paires (${myWords.length})</h3>
+    ${myWords.length ? `<ul class="plist">${myWords.map(([a, b], i) => `
+      <li><span class="av" style="background:${color(i)}">⭐</span><span>${esc(a)} / ${esc(b)}</span>
+      <button class="x" data-act="delw" data-arg="${i}" aria-label="Supprimer">✕</button></li>`).join('')}</ul>`
+      : `<p class="empty">Aucune paire pour l'instant.</p>`}
+  `, {
+    back: home,
+    delw: (i, b) => {
+      b.closest('li').classList.add('out');
+      setTimeout(() => { myWords.splice(+i, 1); store.set('myWords', myWords); myWordsScreen(); }, 230);
+    }
+  }, () => {
+    const a = $('#w1').value.trim(), b = $('#w2').value.trim(), err = $('#werr');
+    const fail = msg => { SFX.play('nope'); err.textContent = msg; err.style.display = ''; };
+    if (!a || !b) return fail('Remplis les deux mots.');
+    if (norm(a) === norm(b)) return fail('Les deux mots doivent être différents.');
+    if (myWords.some(([x, y]) => [norm(x), norm(y)].includes(norm(a)) && [norm(x), norm(y)].includes(norm(b)))) return fail('Cette paire existe déjà.');
+    SFX.play('pop');
+    myWords.unshift([a, b]); store.set('myWords', myWords);
+    myWordsScreen(true);
+    const li = document.querySelector('.plist li'); if (li) li.classList.add('new');
+  }, 'mine');
+  if (focus) $('#w1').focus();
+}
+
+/* ---------- Historique & scores ---------- */
+function historyScreen() {
+  const ranking = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const when = t => new Date(t).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const label = b => `${b.role === 'imp' ? '😈' : '🤍'} ${esc(b.name)}${b.caught === true ? ' 🎯' : b.caught === false ? ' 😏' : ''}`;
+  render(`
+    <div class="top"><button class="back" data-act="back">←</button><h2>📜 Historique</h2></div>
+    <h3>Scores de la soirée</h3>
+    ${ranking.length ? rankHTML(ranking) + `<button class="btn ghost" data-act="resetScores">Remettre les scores à zéro</button>`
+      : `<p class="empty">Active « Votes &amp; scores » dans les options pour compter les points.</p>`}
+    <h3>Dernières parties (${history.length})</h3>
+    ${history.length ? `<ul class="hist">${history.map(h => `
+      <li><div class="when"><span>${when(h.t)}</span><span>${esc(h.cat || '')}</span></div>
+        <div class="words">${esc(h.civ)} <span class="muted">vs</span> ${esc(h.imp)}</div>
+        <div class="who">${h.bad.map(label).join(' · ')}</div></li>`).join('')}</ul>
+      <button class="btn ghost" data-act="clear">Effacer l'historique</button>`
+      : `<p class="empty">Aucune partie jouée pour l'instant.</p>`}
+  `, {
+    back: home,
+    // double appui pour confirmer
+    resetScores: (_, b) => {
+      if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Appuie encore pour confirmer'; return; }
+      scores = {}; store.set('scores', scores); historyScreen();
+    },
+    clear: (_, b) => {
+      if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Appuie encore pour confirmer'; return; }
+      history = []; store.set('history', history); historyScreen();
+    }
+  }, null, 'hist');
+}
+
+/* ---------- Démarrage ---------- */
+home();
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
