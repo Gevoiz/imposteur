@@ -295,8 +295,27 @@ function clearTimers() { timers.forEach(t => { clearInterval(t); clearTimeout(t)
 
 // `key` : quand on re-rend le même écran (ex. ajout d'un joueur), pas d'animation ni de retour en haut.
 let lastKey = null;
+
+/* ---------- Bouton retour (Android / navigateur) ---------- */
+// Revient à l'écran précédent au lieu de fermer l'appli. En pleine partie, il faut appuyer deux fois.
+const NATIVE = !!window.Capacitor?.isNativePlatform?.();
+const CapApp = NATIVE ? window.Capacitor.registerPlugin('App') : null;
+let atHome = false, backAct = null, backArmed = 0;
+function hardBack() {
+  if (atHome) return CapApp && CapApp.exitApp();
+  if (backAct) { SFX.play('back'); return backAct(); }
+  if (Date.now() - backArmed < 2500) { backArmed = 0; SFX.play('back'); return impSetup(); }
+  backArmed = Date.now();
+  if (!NATIVE) window.history.pushState({ imp: 1 }, '');
+  toast('Appuie encore sur retour pour quitter la partie');
+}
+if (CapApp) CapApp.addListener('backButton', hardBack);
+else addEventListener('popstate', () => { if (!atHome) hardBack(); });
 function render(html, acts = {}, onSubmit, key) {
   clearTimers();
+  atHome = key === 'home';
+  backAct = acts.back || acts.quit || acts.menu || null;
+  if (!atHome && !NATIVE && !window.history.state) window.history.pushState({ imp: 1 }, '');
   const same = key && key === lastKey;
   lastKey = key || null;
   app.innerHTML = `<div class="screen">${html}</div>`;
@@ -494,7 +513,7 @@ function home() {
   `, {
     imp: impSetup, rules, mine: myWordsScreen, hist: historyScreen,
     mute: (_, b) => { b.textContent = SFX.toggleMute() ? '🔇' : '🔊'; SFX.play('toggle'); replay(b, 'just'); }
-  });
+  }, null, 'home');
 }
 
 function rules() {
