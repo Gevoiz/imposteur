@@ -261,7 +261,7 @@ const allThemes = () => [...(myWords.length ? [MINE] : []), ...Object.keys(WORDS
 const themeWords = c => c === MINE ? myWords : WORDS[c] || [];
 
 let players = store.get('players', []);
-let impOpts = Object.assign({ imp: 1, white: false, knows: false, votes: false, cats: [] }, store.get('impOpts', {}));
+let impOpts = Object.assign({ imp: 1, white: false, knows: false, noword: false, votes: false, cats: [] }, store.get('impOpts', {}));
 impOpts.cats = impOpts.cats.filter(c => c in WORDS || c === MINE); // thèmes renommés/supprimés entre deux versions
 // Paires déjà jouées : une paire ne revient pas tant que tout le thème n'a pas été joué
 const pairKey = p => p[0] + '|' + p[1];
@@ -387,7 +387,7 @@ const SFX = (() => {
 })();
 // Son joué selon le bouton (data-act) ; par défaut un petit « tap »
 const ACT_SOUND = {
-  del: 'del', auto: 'pop', see: 'flip', reveal: null, mute: null, white: 'toggle', knows: 'toggle',
+  del: 'del', auto: 'pop', see: 'flip', reveal: null, mute: null, white: 'toggle', knows: 'toggle', noword: 'toggle',
   back: 'back', quit: 'back', menu: 'back', start: 'go', again: 'go', next: 'tap', votes: 'toggle',
   delw: 'del', clear: 'del', fold: 'tick', resetUsed: 'del', resetScores: 'del', pickv: 'tick',
   impm: 'tick', impp: 'tick', autom: 'tick', autop: 'tick', cat: 'tick'
@@ -523,7 +523,7 @@ function toggleFold(key, b) {
   b.classList.toggle('open', folds[key]);
   $('#box-' + key).classList.toggle('closed', !folds[key]);
 }
-const optSummary = () => [`${impOpts.imp} imposteur${impOpts.imp > 1 ? 's' : ''}`, impOpts.white && 'Mr White', impOpts.knows && 'informé', impOpts.votes && 'votes'].filter(Boolean).join(' · ');
+const optSummary = () => [`${impOpts.imp} imposteur${impOpts.imp > 1 ? 's' : ''}`, impOpts.white && 'Mr White', impOpts.noword ? 'imposteur sans mot' : impOpts.knows && 'informé', impOpts.votes && 'votes'].filter(Boolean).join(' · ');
 const themeSummary = () => impOpts.cats.length ? (impOpts.cats.length > 2 ? `${impOpts.cats.length} thèmes` : impOpts.cats.join(', ')) : 'Tout';
 function refreshSums() { $('#sum-opts').textContent = optSummary(); $('#sum-themes').textContent = themeSummary(); $('#usedInfo').textContent = usedInfo(); }
 
@@ -552,6 +552,8 @@ function impSetup(focus) {
         <button class="switch ${impOpts.white ? 'on' : ''}" data-act="white" aria-label="Mister White"></button></div>
       <div class="row"><div>L'imposteur sait qu'il l'est<small>Sinon, il le découvre en jouant</small></div>
         <button class="switch ${impOpts.knows ? 'on' : ''}" data-act="knows" aria-label="Imposteur informé"></button></div>
+      <div class="row"><div>Imposteur sans mot 😶<small>Il sait qu'il est l'imposteur, mais n'a aucun mot</small></div>
+        <button class="switch ${impOpts.noword ? 'on' : ''}" data-act="noword" aria-label="Imposteur sans mot"></button></div>
       <div class="row"><div>Votes &amp; scores 🗳️<small>Vote secret avant la révélation</small></div>
         <button class="switch ${impOpts.votes ? 'on' : ''}" data-act="votes" aria-label="Votes et scores"></button></div>
     </div>`)}
@@ -571,6 +573,7 @@ function impSetup(focus) {
     impp: () => setImp(Math.min(maxImp, impOpts.imp + 1)),
     white: (_, b) => { impOpts.white = !impOpts.white; b.classList.toggle('on'); setTimeout(rr, 300); },
     knows: (_, b) => { impOpts.knows = !impOpts.knows; b.classList.toggle('on'); store.set('impOpts', impOpts); refreshSums(); },
+    noword: (_, b) => { impOpts.noword = !impOpts.noword; b.classList.toggle('on'); store.set('impOpts', impOpts); refreshSums(); },
     votes: (_, b) => { impOpts.votes = !impOpts.votes; b.classList.toggle('on'); store.set('impOpts', impOpts); refreshSums(); },
     cat: (c, b) => { impOpts.cats = toggleCat(impOpts.cats, c); store.set('impOpts', impOpts); syncChips(impOpts.cats, b); refreshSums(); },
     fold: toggleFold,
@@ -597,7 +600,7 @@ function startImp() {
   if (impOpts.white) roles.push('white');
   while (roles.length < n) roles.push('civ');
   const shuffled = shuffle(roles);
-  G = { civ: pair[0], imp: pair[1], cat, idx: 0, votes: null,
+  G = { civ: pair[0], imp: impOpts.noword ? null : pair[1], cat, idx: 0, votes: null,
         ps: players.map((name, i) => ({ name, i, role: shuffled[i] })) };
   passPhone();
   if (cycled) toast('🔁 Tous les mots de ces thèmes ont été joués : on recommence !');
@@ -626,6 +629,8 @@ function showWord() {
   let inner;
   if (p.role === 'white') {
     inner = `<span class="badge white">🤍 MISTER WHITE</span><div class="word">Aucun mot</div><p class="muted">Écoute les autres et bluffe !</p>`;
+  } else if (p.role === 'imp' && G.imp === null) {
+    inner = `<span class="badge imp">😈 TU ES L'IMPOSTEUR</span><div class="word">Aucun mot</div><p class="muted">Devine le mot des autres et fonds-toi dans la masse !</p>`;
   } else {
     const w = p.role === 'imp' ? G.imp : G.civ;
     const tag = p.role === 'imp' && impOpts.knows ? `<span class="badge imp">😈 TU ES L'IMPOSTEUR</span>` : `<span class="badge">Ton mot secret</span>`;
@@ -752,7 +757,7 @@ function revealImp() {
     </div>
     <div class="card">
       <div class="row"><span>Mot des civils</span><b>${esc(G.civ)}</b></div>
-      <div class="row"><span>Mot de l'imposteur</span><b>${esc(G.imp)}</b></div>
+      <div class="row"><span>Mot de l'imposteur</span><b>${G.imp === null ? '😶 Aucun' : esc(G.imp)}</b></div>
     </div>
     <ul class="plist">${G.ps.map(p => `<li><span class="av" style="background:${color(p.i)}">${esc(ini(p.name))}</span><span>${esc(p.name)}${V ? ` <span class="votes">🗳️ ${V.got[p.i]}</span>` : ''}</span>${roleBadge(p.role)}${V ? `<span class="delta ${V.delta[p.i] ? '' : 'zero'}">+${V.delta[p.i]}</span>` : ''}</li>`).join('')}</ul>
     ${V ? `<h3>Scores de la soirée</h3>${rankHTML(ranking)}` : ''}
@@ -815,7 +820,7 @@ function historyScreen() {
     <h3>Dernières parties (${history.length})</h3>
     ${history.length ? `<ul class="hist">${history.map(h => `
       <li><div class="when"><span>${when(h.t)}</span><span>${esc(h.cat || '')}</span></div>
-        <div class="words">${esc(h.civ)} <span class="muted">vs</span> ${esc(h.imp)}</div>
+        <div class="words">${esc(h.civ)} <span class="muted">vs</span> ${h.imp == null ? '😶' : esc(h.imp)}</div>
         <div class="who">${h.bad.map(label).join(' · ')}</div></li>`).join('')}</ul>
       <button class="btn ghost" data-act="clear">Effacer l'historique</button>`
       : `<p class="empty">Aucune partie jouée pour l'instant.</p>`}
