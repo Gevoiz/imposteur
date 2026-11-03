@@ -299,7 +299,7 @@ let lastKey = null;
 /* ---------- Bouton retour (Android / navigateur) ---------- */
 // Revient à l'écran précédent au lieu de fermer l'appli. En pleine partie, il faut appuyer deux fois.
 const NATIVE = !!window.Capacitor?.isNativePlatform?.();
-const CapApp = NATIVE ? window.Capacitor.registerPlugin('App') : null;
+const CapApp = NATIVE ? window.Capacitor.Plugins?.App || null : null;   // fourni par le pont natif (pas de @capacitor/core chargé ici)
 let atHome = false, backAct = null, backArmed = 0;
 function hardBack() {
   if (atHome) return CapApp && CapApp.exitApp();
@@ -309,7 +309,7 @@ function hardBack() {
   if (!NATIVE) window.history.pushState({ imp: 1 }, '');
   toast('Appuie encore sur retour pour quitter la partie');
 }
-if (CapApp) CapApp.addListener('backButton', hardBack);
+if (CapApp) { try { CapApp.addListener('backButton', hardBack); } catch (e) { console.error(e); } }
 else addEventListener('popstate', () => { if (!atHome) hardBack(); });
 function render(html, acts = {}, onSubmit, key) {
   clearTimers();
